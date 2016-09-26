@@ -2,6 +2,8 @@
 Time-series
 ===========
 
+:Status: Pre-Alpha
+
 A rust crate that deals with time-series data, initially written
 for, and battle-tested in cantal_.
 
