@@ -6,3 +6,9 @@ extern crate num_integer;
 #[macro_use] extern crate quick_error;
 
 pub mod mem;
+
+
+/// Measure true size of objects
+pub trait ByteSize {
+    fn size(&self) -> usize;
+}

@@ -22,7 +22,7 @@
 //! crate where you receive lots of metrics with the same timestamp. Or when
 //! you quantize metrics by fixed interval. But not when you receive many
 //! metrics with arbitrary timestamp and need to keep store precise timestamps.
-//! But you may store a `DeltaTimestamps` for each metric in the latter case.
+//! But you may store a `TimestampsMs` for each metric in the latter case.
 //! (or you may contribute better implementation)
 
 use std::ops::{Shl, Shr, BitOr, BitAnd};
@@ -35,17 +35,19 @@ mod timestamps;
 mod int;
 
 pub use self::timestamps::TimestampsMs;
+pub use self::int::IntSeries;
 
-pub trait Integer: num_integer::Integer + FromPrimitive + ToPrimitive + Copy +
+pub trait Integer: num_integer::Integer + Copy +
     Shl<u32, Output=Self> + Shr<u32, Output=Self> +
-    BitOr<Self, Output=Self> + BitAnd<Self, Output=Self> {}
+    BitOr<Self, Output=Self> + BitAnd<Self, Output=Self> +
+    FromPrimitive + ToPrimitive
+{}
 
-trait Timestamps {
-    type Age;
-    fn current_age(&self) -> Self::Age;
+pub trait Timestamps {
+    fn current_age(&self) -> u64;
 }
 
-trait Metric<S: Timestamps> {
+pub trait Metric<S: Timestamps> {
     type Value;
     fn push(&mut self, timestamps: &S, value: Self::Value)
         -> Result<(), PushError>;
@@ -54,7 +56,7 @@ trait Metric<S: Timestamps> {
 
 quick_error! {
     #[derive(Debug)]
-    enum PushError {
+    pub enum PushError {
         DuplicateValue {
             description("received a value for the same timestamp twice")
         }

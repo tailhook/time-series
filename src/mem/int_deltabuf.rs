@@ -7,6 +7,7 @@ use std::collections::vec_deque::Iter as DequeIter;
 use num_integer::Integer;
 use num_traits::{FromPrimitive, ToPrimitive};
 
+use {ByteSize};
 use super::Integer as Int;
 
 
@@ -28,6 +29,12 @@ const CONTINUATION_MASK: u8 = 0b01111111;
 
 #[derive(Debug, Clone)]
 pub struct DeltaBuf<T:Int>(VecDeque<u8>, PhantomData<T>);
+
+impl<T:Int> ByteSize for DeltaBuf<T> {
+    fn size(&self) -> usize {
+        ::std::mem::size_of_val(&self) + self.0.len()
+    }
+}
 
 #[derive(PartialEq, Eq, Debug, Clone, Copy)]
 pub enum Delta<T:Int> {
