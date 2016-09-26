@@ -1,0 +1,23 @@
+[package]
+
+name = "time-series"
+description = """
+    A collection of data types to handle time-series data, initially written
+    for, and battle-tested in cantal
+"""
+license = "MIT/Apache-2.0"
+readme = "README.rst"
+keywords = ["monitoring", "statistics", "time-series", "time", "metrics"]
+homepage = "http://github.com/tailhook/time-series"
+version = "0.1.0"
+authors = ["paul@colomiets.name"]
+
+[lib]
+
+path = 'src/lib.rs'
+
+[dependencies]
+num-traits = "0.1.32"
+num-integer = "0.1.32"
+quick-error = "1.1.0"
+
