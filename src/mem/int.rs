@@ -91,28 +91,40 @@ impl<S:Timestamps, T:Integer> Metric<S> for IntSeries<S, T> {
 #[cfg(test)]
 mod test {
     use std::usize;
-    use mem::{TimestampsMs, IntSeries, Metric};
+    use mem::{TimestampsMs, IntSeries, Metric, Integer};
+
+    fn check_generic<T:Integer>(start: T, vec: Vec<Option<T>>) -> bool {
+        let mut tsv = 1;
+        let mut ts =  TimestampsMs::new(tsv);
+        let mut vals = IntSeries::new(&ts, start);
+        for val in &vec {
+            tsv += 1;
+            ts.push(tsv);
+            val.map(|x| vals.push(&ts, x));
+        }
+        let mut out = Vec::with_capacity(vec.len());
+        vals.into_vec(&ts, &mut out, usize::MAX);
+        out.reverse();
+        return
+            Some(start) == out[0] &&
+            &vec[..] == &out[1..];
+    }
 
     quickcheck! {
         fn check_u64(start: u64, vec: Vec<Option<u64>>) -> bool {
-            println!("VEC {}, {:?}", start, vec);
-            let mut tsv = 1;
-            let mut ts =  TimestampsMs::new(tsv);
-            let mut vals = IntSeries::new(&ts, start);
-            for val in &vec {
-                tsv += 1;
-                ts.push(tsv);
-                val.map(|x| vals.push(&ts, x));
-            }
-            let mut out = Vec::with_capacity(vec.len());
-            vals.into_vec(&ts, &mut out, usize::MAX);
-            println!("OUT {:?} {:?} {}", &vec[..], out,
-                Some(start) == out[0] &&
-                &vec[..] == &out[1..]);
-            out.reverse();
-            return
-                Some(start) == out[0] &&
-                &vec[..] == &out[1..];
+            check_generic(start, vec)
+        }
+    }
+
+    quickcheck! {
+        fn check_i64(start: i64, vec: Vec<Option<i64>>) -> bool {
+            check_generic(start, vec)
+        }
+    }
+
+    quickcheck! {
+        fn check_i32(start: i32, vec: Vec<Option<i32>>) -> bool {
+            check_generic(start, vec)
         }
     }
 }
