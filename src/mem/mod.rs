@@ -43,18 +43,52 @@ pub trait Integer: num_integer::Integer + Copy +
     FromPrimitive + ToPrimitive
 {}
 
+/// Timetsamps
 pub trait Timestamps {
+    /// Age of the current (most recent) timestamp
+    ///
+    /// This function should ouly be used in Metric for optimisations
     fn current_age(&self) -> u64;
 }
 
-pub trait Metric<S: Timestamps> {
+/// Generic interface for storing history of a single metric
+pub trait Metric<S: Timestamps>: Sized {
+    /// Single value type
     type Value;
+    /// Pash a new value
     fn push(&mut self, timestamps: &S, value: Self::Value)
         -> Result<(), PushError>;
+    /// Pushes last values from this metric into a vector
+    ///
+    /// Values are pushed with most recent value first
+    ///
+    /// This is implemented in the spirit of `io::Read::read` rather than
+    /// as an iterator for two reasons:
+    ///
+    /// 1. We want maximum performance so using preallocated vector is good
+    /// 2. We want "object safe" trait so we can't use generics here
+    /// 3. If it were iterator every implementation must return it's own
+    ///    iterator type, which will not work without some kind of boxing
+    ///
+    /// Why use use a separate `max` parameter:
+    ///
+    /// * `max` doesn't equal to capacity because that would mean reallocating
+    ///   vector when not needed (i.e. either shriking it before passing a
+    ///   function, or growing when there are no actual data)
+    /// * we don't use slice and return value because that would mean
+    ///   unnecessarily zeroing vector or security issues
+    fn into_vec(&self, timestamps: &S, dest: &mut Vec<Option<Self::Value>>,
+                max: usize);
+
+    /// Truncate history up to `num` values at max
+    ///
+    /// Returns `true` if there are some data left in the storage
+    fn truncate(&mut self, timestamps: &S, num: usize) -> bool;
 }
 
 
 quick_error! {
+    /// Error when pusing value into a metric buffer
     #[derive(Debug)]
     pub enum PushError {
         DuplicateValue {
